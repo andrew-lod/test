@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=ticketVault
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_USER=myuser
+    ports:
+      - '5433:5432'
+    volumes:
+      - './backend/docker/CREATE_DB.sql:/docker-entrypoint-initdb.d/1_CREATE.sql'
+      - './backend/docker/INSERT.sql:/docker-entrypoint-initdb.d/2_INSERT.sql'
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: backend.Dockerfile
+    ports:
+      - '8080:8080'
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ticketVault
+      - SPRING_DATASOURCE_USERNAME=myuser
+      - SPRING_DATASOURCE_PASSWORD=secret
+    depends_on:
+      - postgres
+
+  frontend:
+    build: 
+      context: ./ticket-vault-frontend
+      dockerfile: frontend.Dockerfile
+    ports:
+      - '4040:80'
+    depends_on:
+      - backend
